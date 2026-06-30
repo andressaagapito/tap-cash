@@ -2,16 +2,18 @@ services:
   db:
     image: postgres:16-alpine
     container_name: tapcash-db
+    env_file:
+      - ./.env
     environment:
-      POSTGRES_USER: tapcash
-      POSTGRES_PASSWORD: tapcash123
-      POSTGRES_DB: tapcash
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tapcash"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -19,10 +21,8 @@ services:
   backend:
     build: ./backend
     container_name: tapcash-backend
-    environment:
-      DATABASE_URL: postgresql://tapcash:tapcash123@db:5432/tapcash
-      SECRET_KEY: dev-secret-key-change-in-production
-      CORS_ORIGINS: http://localhost:5173,http://localhost:3000
+    env_file:
+      - ./backend/.env
     ports:
       - "8000:8000"
     volumes:
@@ -34,8 +34,8 @@ services:
   frontend:
     build: ./frontend
     container_name: tapcash-frontend
-    environment:
-      VITE_API_URL: http://localhost:8000
+    env_file:
+      - ./frontend/.env
     ports:
       - "5173:5173"
     volumes:
