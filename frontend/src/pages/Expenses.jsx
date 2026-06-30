@@ -47,7 +47,7 @@ export default function Expenses() {
     setLoading(true);
     try {
       const params = {};
-      if (filters.card_id) params.card_id = filters.card_id;
+      if (filters.card_uuid) params.card_uuid = filters.card_uuid;
       if (filters.status) params.status = filters.status;
       if (filters.type) params.type = filters.type;
       if (filters.search) params.search = filters.search;
@@ -74,9 +74,9 @@ export default function Expenses() {
     }
   };
 
-  const handleMarkPaid = async (id) => {
+  const handleMarkPaid = async (uuid) => {
     try {
-      await expensesApi.markAsPaid(id);
+      await expensesApi.markAsPaid(uuid);
       toast.success(t('expenses.markedPaid'));
       loadExpenses();
     } catch (error) {
@@ -109,11 +109,11 @@ export default function Expenses() {
           />
           <Select
             label={t('expenses.card')}
-            value={filters.card_id}
-            onChange={(e) => setFilters({ ...filters, card_id: e.target.value })}
+            value={filters.card_uuid}
+            onChange={(e) => setFilters({ ...filters, card_uuid: e.target.value })}
             options={[
               { value: '', label: t('common.all') },
-              ...cards.map((c) => ({ value: c.id, label: c.name })),
+              ...cards.map((c) => ({ value: c.uuid, label: c.name })),
             ]}
           />
           <Select
@@ -214,14 +214,14 @@ export default function Expenses() {
                       {exp.status === 'active' && (
                         <>
                           <button
-                            onClick={() => setInstallmentsExpense({ id: exp.id, name: exp.name })}
+                            onClick={() => setInstallmentsExpense({ id: exp.uuid, name: exp.name })}
                             className="rounded-lg p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30"
                             title={t('expenses.viewInstallments')}
                           >
                             <List size={16} />
                           </button>
                           <button
-                          onClick={() => handleMarkPaid(exp.id)}
+                          onClick={() => handleMarkPaid(exp.uuid)}
                           className="rounded-lg p-1.5 text-green-600 hover:bg-green-50"
                           title={t('expenses.markAsPaid')}
                         >
@@ -230,13 +230,13 @@ export default function Expenses() {
                         </>
                       )}
                       <Link
-                        to={`/expenses/${exp.id}/edit`}
+                        to={`/expenses/${exp.uuid}/edit`}
                         className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                       >
                         <Pencil size={16} />
                       </Link>
                       <button
-                        onClick={() => setDeleteId(exp.id)}
+                        onClick={() => setDeleteId(exp.uuid)}
                         className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
                       >
                         <Trash2 size={16} />

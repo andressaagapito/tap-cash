@@ -28,7 +28,7 @@ export default function Header({ onMenuClick }) {
       <div className="flex items-center gap-3">
         <PreferencesBar />
         <span className="hidden text-sm text-slate-600 dark:text-slate-300 sm:inline">
-          {t('common.hello', { name: user?.name })}
+          {t('common.hello', { name: `${user?.name || ''} ${user?.last_name || ''}`.trim() })}
         </span>
         <Button variant="ghost" size="sm" onClick={handleLogout}>
           <LogOut size={18} />

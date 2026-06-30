@@ -38,7 +38,7 @@ export default function CreditCardTile({ card, onEdit, onDelete, preview = false
                 <Pencil size={16} />
               </button>
               <button
-                onClick={() => onDelete(card.id)}
+                onClick={() => onDelete(card.uuid)}
                 className="rounded-lg p-2 text-white/80 hover:bg-white/20 hover:text-white"
               >
                 <Trash2 size={16} />

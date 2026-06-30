@@ -133,7 +133,7 @@ export default function Cards() {
 
     try {
       if (editingCard) {
-        await cardsApi.update(editingCard.id, payload);
+        await cardsApi.update(editingCard.uuid, payload);
         toast.success(t('cards.updated'));
       } else {
         await cardsApi.create(payload);

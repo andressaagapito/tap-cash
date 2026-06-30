@@ -1,3 +1,4 @@
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -11,8 +12,8 @@ from app.schemas.card import CardCreate, CardResponse, CardUpdate
 router = APIRouter(prefix="/cards", tags=["Cards"])
 
 
-def _get_user_card(db: Session, card_id: int, user_id: int) -> Card:
-    card = db.query(Card).filter(Card.id == card_id, Card.user_id == user_id).first()
+def _get_user_card(db: Session, card_uuid: UUID, user_id: int) -> Card:
+    card = db.query(Card).filter(Card.uuid == card_uuid, Card.user_id == user_id).first()
     if not card:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CARD_NOT_FOUND)
     return card
@@ -39,23 +40,23 @@ def create_card(
     return card
 
 
-@router.get("/{card_id}", response_model=CardResponse)
+@router.get("/{card_uuid}", response_model=CardResponse)
 def get_card(
-    card_id: int,
+    card_uuid: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return _get_user_card(db, card_id, current_user.id)
+    return _get_user_card(db, card_uuid, current_user.id)
 
 
-@router.put("/{card_id}", response_model=CardResponse)
+@router.put("/{card_uuid}", response_model=CardResponse)
 def update_card(
-    card_id: int,
+    card_uuid: UUID,
     data: CardUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    card = _get_user_card(db, card_id, current_user.id)
+    card = _get_user_card(db, card_uuid, current_user.id)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(card, field, value)
     db.commit()
@@ -63,12 +64,12 @@ def update_card(
     return card
 
 
-@router.delete("/{card_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{card_uuid}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_card(
-    card_id: int,
+    card_uuid: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    card = _get_user_card(db, card_id, current_user.id)
+    card = _get_user_card(db, card_uuid, current_user.id)
     db.delete(card)
     db.commit()

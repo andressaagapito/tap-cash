@@ -12,9 +12,21 @@ from app.i18n.keys import (
     TOKEN_EXPIRED,
     USER_NOT_FOUND,
     VALIDATION_ERROR,
+    RECOVERY_PHRASE_INVALID,
+    PASSWORD_WEAK,
 )
 
 TRANSLATIONS: dict[str, dict[str, str]] = {
+    RECOVERY_PHRASE_INVALID: {
+        "pt-BR": "Não foi possível validar sua palavra-passe. Um ticket foi aberto para a equipe de suporte.",
+        "en": "Could not validate your recovery phrase. A support ticket has been opened.",
+        "es": "No se pudo validar su frase de recuperación. Se ha abierto un ticket de soporte.",
+    },
+    PASSWORD_WEAK: {
+        "pt-BR": "A senha deve ter pelo menos 8 caracteres, incluindo uma letra maiúscula, uma minúscula, um número e um caractere especial.",
+        "en": "The password must be at least 8 characters long, including an uppercase letter, a lowercase letter, a number, and a special character.",
+        "es": "La contraseña debe tener al menos 8 caracteres, incluyendo una letra mayúscula, una minúscula, un número y un carácter especial.",
+    },
     EMAIL_ALREADY_REGISTERED: {
         "pt-BR": "E-mail já cadastrado",
         "en": "Email already registered",

@@ -1,7 +1,9 @@
+from uuid import UUID
 from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, Field, model_validator
+
 
 from app.models.expense import ExpenseStatus, ExpenseType, PaymentMethod
 from app.services.expense_calculator import get_max_installments
@@ -23,6 +25,7 @@ class ExpenseCreate(BaseModel):
     total_installments: int = Field(default=1, ge=1)
     recurrence_months: int | None = Field(default=None, ge=1)
     card_id: int | None = None
+    card_uuid: UUID | None = None
     category: str = Field(min_length=1, max_length=100)
     notes: str | None = None
     status: ExpenseStatus = ExpenseStatus.ACTIVE
@@ -32,6 +35,7 @@ class ExpenseCreate(BaseModel):
     def validate_expense(self):
         if self.payment_method != PaymentMethod.CREDIT_CARD:
             self.card_id = None
+            self.card_uuid = None
 
         if self.payment_method == PaymentMethod.DEBIT_CARD:
             self.type = ExpenseType.ONE_TIME
@@ -78,6 +82,7 @@ class ExpenseUpdate(BaseModel):
     total_installments: int | None = Field(default=None, ge=1)
     recurrence_months: int | None = Field(default=None, ge=1)
     card_id: int | None = None
+    card_uuid: UUID | None = None
     category: str | None = Field(default=None, min_length=1, max_length=100)
     notes: str | None = None
     status: ExpenseStatus | None = None
@@ -120,6 +125,7 @@ class InstallmentDetail(BaseModel):
 
 class ExpenseResponse(BaseModel):
     id: int
+    uuid: UUID
     user_id: int
     card_id: int | None
     payment_method: PaymentMethod

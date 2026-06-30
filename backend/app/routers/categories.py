@@ -1,3 +1,4 @@
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -14,10 +15,10 @@ from app.services.category import ensure_user_category
 router = APIRouter(prefix="/categories", tags=["Categories"])
 
 
-def _get_user_category(db: Session, category_id: int, user_id: int) -> UserCategory:
+def _get_user_category(db: Session, category_uuid: UUID, user_id: int) -> UserCategory:
     category = (
         db.query(UserCategory)
-        .filter(UserCategory.id == category_id, UserCategory.user_id == user_id)
+        .filter(UserCategory.uuid == category_uuid, UserCategory.user_id == user_id)
         .first()
     )
     if not category:
@@ -65,12 +66,12 @@ def create_category(
     return category
 
 
-@router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{category_uuid}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_category(
-    category_id: int,
+    category_uuid: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    category = _get_user_category(db, category_id, current_user.id)
+    category = _get_user_category(db, category_uuid, current_user.id)
     db.delete(category)
     db.commit()

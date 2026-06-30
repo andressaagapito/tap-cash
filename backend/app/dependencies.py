@@ -29,7 +29,17 @@ def get_current_user(
             detail=INVALID_TOKEN,
         )
 
-    user = db.query(User).filter(User.id == int(user_id)).first()
+    user = None
+    try:
+        import uuid
+        uuid.UUID(user_id)
+        user = db.query(User).filter(User.uuid == user_id).first()
+    except ValueError:
+        try:
+            user = db.query(User).filter(User.id == int(user_id)).first()
+        except ValueError:
+            pass
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

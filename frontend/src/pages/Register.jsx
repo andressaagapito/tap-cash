@@ -27,6 +27,7 @@ export default function Register() {
           email: z.string().email(t('validation.invalidEmail')),
           password: z.string().min(6, t('validation.passwordMin')),
           confirmPassword: z.string(),
+          recoveryPhrase: z.string().min(3, t('validation.requiredRecoveryPhrase')),
         })
         .refine((data) => data.password === data.confirmPassword, {
           message: t('validation.passwordMismatch'),
@@ -48,6 +49,7 @@ export default function Register() {
         name: data.name,
         email: data.email,
         password: data.password,
+        recovery_phrase: data.recoveryPhrase,
       });
       setAuth(res.access_token, res.user);
       toast.success(t('auth.registerSuccess'));
@@ -100,6 +102,13 @@ export default function Register() {
             placeholder="••••••"
             error={errors.confirmPassword?.message}
             {...register('confirmPassword')}
+          />
+          <Input
+            label={t('auth.recoveryPhrase')}
+            type="password"
+            placeholder={t('auth.recoveryPhrasePlaceholder')}
+            error={errors.recoveryPhrase?.message}
+            {...register('recoveryPhrase')}
           />
           <Button type="submit" className="w-full" loading={loading}>
             {t('auth.register')}

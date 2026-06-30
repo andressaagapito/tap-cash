@@ -99,8 +99,11 @@ class CardUpdate(BaseModel):
         return _validate_icon(value)
 
 
+from uuid import UUID
+
 class CardResponse(BaseModel):
     id: int
+    uuid: UUID
     user_id: int
     name: str
     institution: str
@@ -112,3 +115,4 @@ class CardResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+

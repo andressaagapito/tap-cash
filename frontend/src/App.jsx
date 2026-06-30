@@ -4,6 +4,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './components/layout/AppLayout';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import PasswordResetTicket from './pages/PasswordResetTicket';
 import Dashboard from './pages/Dashboard';
 import Cards from './pages/Cards';
 import Expenses from './pages/Expenses';
@@ -53,6 +55,22 @@ export default function App() {
           element={
             <PublicRoute>
               <Register />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <PublicRoute>
+              <ForgotPassword />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/password-reset-ticket"
+          element={
+            <PublicRoute>
+              <PasswordResetTicket />
             </PublicRoute>
           }
         />

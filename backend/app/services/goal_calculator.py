@@ -95,6 +95,7 @@ def build_option_comparison(goal: Goal, options: list[GoalOption], metrics: dict
         comparison.append(
             {
                 "option_id": option.id,
+                "option_uuid": option.uuid,
                 "name": option.name,
                 "estimated_amount": option.estimated_amount,
                 "status": option.status,
