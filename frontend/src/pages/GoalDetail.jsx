@@ -157,7 +157,7 @@ export default function GoalDetail() {
 
     try {
       if (editingOption) {
-        await goalsApi.updateOption(id, editingOption.id, payload);
+        await goalsApi.updateOption(id, editingOption.uuid, payload);
         toast.success(t('goals.optionUpdated'));
       } else {
         await goalsApi.createOption(id, payload);
@@ -387,7 +387,7 @@ export default function GoalDetail() {
                           <Button variant="ghost" size="sm" onClick={() => openEditOption(option)}>
                             <Pencil size={14} />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => setDeleteOptionId(option.id)}>
+                          <Button variant="ghost" size="sm" onClick={() => setDeleteOptionId(option.uuid)}>
                             <Trash2 size={14} className="text-red-500" />
                           </Button>
                         </div>

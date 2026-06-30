@@ -1,8 +1,10 @@
+from uuid import UUID, uuid4
 import enum
 from datetime import date, datetime, timezone
 from decimal import Decimal
 
-from sqlalchemy import Date, DateTime, Enum, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Date, DateTime, Enum, ForeignKey, Integer, Numeric, String, Text, text
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -30,6 +32,14 @@ class Expense(Base):
     __tablename__ = "expenses"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    uuid: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        unique=True,
+        index=True,
+        nullable=False,
+        default=uuid4,
+        server_default=text("gen_random_uuid()"),
+    )
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     card_id: Mapped[int | None] = mapped_column(ForeignKey("cards.id", ondelete="SET NULL"), nullable=True)
     payment_method: Mapped[PaymentMethod] = mapped_column(

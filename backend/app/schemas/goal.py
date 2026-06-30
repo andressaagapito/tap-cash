@@ -1,3 +1,4 @@
+from uuid import UUID
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -24,6 +25,7 @@ class GoalOptionUpdate(BaseModel):
 
 class GoalOptionResponse(BaseModel):
     id: int
+    uuid: UUID
     goal_id: int
     name: str
     estimated_amount: Decimal
@@ -64,6 +66,7 @@ class GoalUpdate(BaseModel):
 
 class GoalResponse(BaseModel):
     id: int
+    uuid: UUID
     user_id: int
     name: str
     description: str | None
@@ -87,6 +90,7 @@ class GoalResponse(BaseModel):
 
 class GoalOptionComparison(BaseModel):
     option_id: int
+    option_uuid: UUID
     name: str
     estimated_amount: Decimal
     status: GoalOptionStatus

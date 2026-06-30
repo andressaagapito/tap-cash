@@ -104,13 +104,23 @@ export default function Login() {
             error={errors.email?.message}
             {...register('email')}
           />
-          <Input
-            label={t('common.password')}
-            type="password"
-            placeholder="••••••"
-            error={errors.password?.message}
-            {...register('password')}
-          />
+          <div className="space-y-1">
+            <Input
+              label={t('common.password')}
+              type="password"
+              placeholder="••••••"
+              error={errors.password?.message}
+              {...register('password')}
+            />
+            <div className="flex justify-end">
+              <Link
+                to="/forgot-password"
+                className="text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+              >
+                {t('auth.forgotPasswordLink')}
+              </Link>
+            </div>
+          </div>
           <Button type="submit" className="w-full" loading={loading}>
             {t('auth.login')}
           </Button>

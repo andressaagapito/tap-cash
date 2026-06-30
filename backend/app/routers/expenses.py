@@ -1,3 +1,4 @@
+from uuid import UUID
 from datetime import date, datetime, timezone
 from decimal import Decimal
 
@@ -65,8 +66,10 @@ def _expense_to_response(expense: Expense, auto_mark: bool = False) -> ExpenseRe
     next_pending = get_next_pending_installment(expense, auto_mark=auto_mark)
     return ExpenseResponse(
         id=expense.id,
+        uuid=expense.uuid,
         user_id=expense.user_id,
         card_id=expense.card_id,
+        card_uuid=expense.card.uuid if expense.card else None,
         payment_method=expense.payment_method,
         name=expense.name,
         type=expense.type,
@@ -99,19 +102,20 @@ def _expense_with_installments(expense: Expense, auto_mark: bool = False) -> Exp
     return ExpenseWithInstallments(**base, installments=installments)
 
 
-def _get_user_expense(db: Session, expense_id: int, user_id: int) -> Expense:
-    expense = _expense_query(db, user_id).filter(Expense.id == expense_id).first()
+def _get_user_expense(db: Session, expense_uuid: UUID, user_id: int) -> Expense:
+    expense = _expense_query(db, user_id).filter(Expense.uuid == expense_uuid).first()
     if not expense:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=EXPENSE_NOT_FOUND)
     return expense
 
 
-def _validate_card(db: Session, card_id: int | None, user_id: int):
-    if card_id is None:
-        return
-    card = db.query(Card).filter(Card.id == card_id, Card.user_id == user_id).first()
+def _resolve_card_id(db: Session, card_uuid: UUID | None, user_id: int) -> int | None:
+    if card_uuid is None:
+        return None
+    card = db.query(Card).filter(Card.uuid == card_uuid, Card.user_id == user_id).first()
     if not card:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=INVALID_CARD)
+    return card.id
 
 
 @router.get("/dashboard", response_model=DashboardResponse)
@@ -156,6 +160,7 @@ def get_dashboard(
 @router.get("", response_model=list[ExpenseResponse])
 def list_expenses(
     card_id: int | None = Query(None),
+    card_uuid: UUID | None = Query(None),
     status_filter: ExpenseStatus | None = Query(None, alias="status"),
     type_filter: ExpenseType | None = Query(None, alias="type"),
     search: str | None = Query(None, max_length=200),
@@ -167,6 +172,8 @@ def list_expenses(
 
     if card_id:
         query = query.filter(Expense.card_id == card_id)
+    if card_uuid:
+        query = query.join(Expense.card).filter(Card.uuid == card_uuid)
     if status_filter:
         query = query.filter(Expense.status == status_filter)
     if type_filter:
@@ -186,8 +193,15 @@ def create_expense(
     current_user: User = Depends(get_current_user),
 ):
     auto_mark = _get_auto_mark(db, current_user.id)
-    _validate_card(db, data.card_id, current_user.id)
-    create_data = data.model_dump(exclude={"initial_paid_installments"})
+    
+    card_id = None
+    if data.card_uuid is not None:
+        card_id = _resolve_card_id(db, data.card_uuid, current_user.id)
+    elif data.card_id is not None:
+        card_id = data.card_id
+
+    create_data = data.model_dump(exclude={"initial_paid_installments", "card_uuid", "card_id"})
+    create_data["card_id"] = card_id
     paid_count = data.initial_paid_installments
     expense = Expense(user_id=current_user.id, **create_data)
     db.add(expense)
@@ -203,41 +217,41 @@ def create_expense(
     ensure_user_category(db, current_user.id, data.category)
     db.commit()
     db.refresh(expense)
-    expense = _get_user_expense(db, expense.id, current_user.id)
+    expense = _get_user_expense(db, expense.uuid, current_user.id)
     return _expense_to_response(expense, auto_mark)
 
 
-@router.get("/{expense_id}", response_model=ExpenseWithInstallments)
+@router.get("/{expense_uuid}", response_model=ExpenseWithInstallments)
 def get_expense(
-    expense_id: int,
+    expense_uuid: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     auto_mark = _get_auto_mark(db, current_user.id)
-    expense = _get_user_expense(db, expense_id, current_user.id)
+    expense = _get_user_expense(db, expense_uuid, current_user.id)
     return _expense_with_installments(expense, auto_mark)
 
 
-@router.get("/{expense_id}/installments", response_model=list[InstallmentDetail])
+@router.get("/{expense_uuid}/installments", response_model=list[InstallmentDetail])
 def list_installments(
-    expense_id: int,
+    expense_uuid: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     auto_mark = _get_auto_mark(db, current_user.id)
-    expense = _get_user_expense(db, expense_id, current_user.id)
+    expense = _get_user_expense(db, expense_uuid, current_user.id)
     return [InstallmentDetail(**item) for item in build_installment_details(expense, auto_mark=auto_mark)]
 
 
-@router.patch("/{expense_id}/installments/{installment_number}/mark-paid", response_model=ExpenseWithInstallments)
+@router.patch("/{expense_uuid}/installments/{installment_number}/mark-paid", response_model=ExpenseWithInstallments)
 def mark_installment_paid(
-    expense_id: int,
+    expense_uuid: UUID,
     installment_number: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     auto_mark = _get_auto_mark(db, current_user.id)
-    expense = _get_user_expense(db, expense_id, current_user.id)
+    expense = _get_user_expense(db, expense_uuid, current_user.id)
 
     if expense.status != ExpenseStatus.ACTIVE:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=EXPENSE_NOT_FOUND)
@@ -263,19 +277,19 @@ def mark_installment_paid(
         db.add(payment)
 
     db.commit()
-    expense = _get_user_expense(db, expense_id, current_user.id)
+    expense = _get_user_expense(db, expense_uuid, current_user.id)
     return _expense_with_installments(expense, auto_mark)
 
 
-@router.patch("/{expense_id}/installments/{installment_number}/mark-unpaid", response_model=ExpenseWithInstallments)
+@router.patch("/{expense_uuid}/installments/{installment_number}/mark-unpaid", response_model=ExpenseWithInstallments)
 def mark_installment_unpaid(
-    expense_id: int,
+    expense_uuid: UUID,
     installment_number: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     auto_mark = _get_auto_mark(db, current_user.id)
-    expense = _get_user_expense(db, expense_id, current_user.id)
+    expense = _get_user_expense(db, expense_uuid, current_user.id)
 
     payment = next(
         (p for p in expense.installment_payments if p.installment_number == installment_number),
@@ -286,24 +300,30 @@ def mark_installment_unpaid(
 
     db.delete(payment)
     db.commit()
-    expense = _get_user_expense(db, expense_id, current_user.id)
+    expense = _get_user_expense(db, expense_uuid, current_user.id)
     return _expense_with_installments(expense, auto_mark)
 
 
-@router.put("/{expense_id}", response_model=ExpenseResponse)
+@router.put("/{expense_uuid}", response_model=ExpenseResponse)
 def update_expense(
-    expense_id: int,
+    expense_uuid: UUID,
     data: ExpenseUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     auto_mark = _get_auto_mark(db, current_user.id)
-    expense = _get_user_expense(db, expense_id, current_user.id)
+    expense = _get_user_expense(db, expense_uuid, current_user.id)
     update_data = data.model_dump(exclude_unset=True)
     paid_count = update_data.pop("initial_paid_installments", None)
     status_value = update_data.pop("status", None)
-    if "card_id" in update_data:
-        _validate_card(db, update_data["card_id"], current_user.id)
+    
+    if "card_uuid" in update_data:
+        card_uuid = update_data.pop("card_uuid")
+        expense.card_id = _resolve_card_id(db, card_uuid, current_user.id)
+    elif "card_id" in update_data:
+        card_id = update_data.pop("card_id")
+        expense.card_id = card_id
+
     for field, value in update_data.items():
         setattr(expense, field, value)
     db.flush()
@@ -325,30 +345,30 @@ def update_expense(
     if "category" in update_data:
         ensure_user_category(db, current_user.id, update_data["category"])
     db.commit()
-    expense = _get_user_expense(db, expense_id, current_user.id)
+    expense = _get_user_expense(db, expense_uuid, current_user.id)
     return _expense_to_response(expense, auto_mark)
 
 
-@router.delete("/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{expense_uuid}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_expense(
-    expense_id: int,
+    expense_uuid: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    expense = _get_user_expense(db, expense_id, current_user.id)
+    expense = _get_user_expense(db, expense_uuid, current_user.id)
     db.delete(expense)
     db.commit()
 
 
-@router.patch("/{expense_id}/mark-as-paid", response_model=ExpenseResponse)
+@router.patch("/{expense_uuid}/mark-as-paid", response_model=ExpenseResponse)
 def mark_as_paid(
-    expense_id: int,
+    expense_uuid: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     auto_mark = _get_auto_mark(db, current_user.id)
-    expense = _get_user_expense(db, expense_id, current_user.id)
+    expense = _get_user_expense(db, expense_uuid, current_user.id)
     expense.status = ExpenseStatus.PAID_OFF
     db.commit()
-    expense = _get_user_expense(db, expense_id, current_user.id)
+    expense = _get_user_expense(db, expense_uuid, current_user.id)
     return _expense_to_response(expense, auto_mark)

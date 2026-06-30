@@ -85,17 +85,17 @@ export default function GoalCard({ goal, onDelete }) {
       </div>
 
       <div className="mt-4 flex gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
-        <Link to={`/goals/${goal.id}`} className="flex-1">
+        <Link to={`/goals/${goal.uuid}`} className="flex-1">
           <Button variant="secondary" className="w-full" size="sm">
             {t('goals.viewDetails')}
           </Button>
         </Link>
-        <Link to={`/goals/${goal.id}/edit`}>
+        <Link to={`/goals/${goal.uuid}/edit`}>
           <Button variant="ghost" size="sm" title={t('goals.editGoal')}>
             <Pencil size={16} />
           </Button>
         </Link>
-        <Button variant="ghost" size="sm" onClick={() => onDelete(goal.id)} title={t('goals.deleteGoal')}>
+        <Button variant="ghost" size="sm" onClick={() => onDelete(goal.uuid)} title={t('goals.deleteGoal')}>
           <Trash2 size={16} className="text-red-500" />
         </Button>
       </div>

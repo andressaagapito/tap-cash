@@ -70,7 +70,7 @@ function CreditCardListRow({ card, onEdit, onDelete }) {
           </button>
           <button
             type="button"
-            onClick={() => onDelete(card.id)}
+            onClick={() => onDelete(card.uuid)}
             className="rounded-lg p-2 text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
             title={t('cards.deleteTitle')}
           >

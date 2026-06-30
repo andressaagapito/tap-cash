@@ -1,6 +1,6 @@
+from uuid import UUID
 from datetime import datetime
 from decimal import Decimal
-
 from pydantic import BaseModel, Field
 
 
@@ -11,6 +11,7 @@ class FinancialProfileUpdate(BaseModel):
 
 class FinancialProfileResponse(BaseModel):
     id: int
+    uuid: UUID
     user_id: int
     monthly_salary: Decimal
     auto_mark_installments_paid: bool = False

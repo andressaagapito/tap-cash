@@ -1,3 +1,4 @@
+from uuid import UUID
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -36,16 +37,16 @@ def _goal_query(db: Session, user_id: int):
     )
 
 
-def _get_user_goal(db: Session, goal_id: int, user_id: int) -> Goal:
-    goal = _goal_query(db, user_id).filter(Goal.id == goal_id).first()
+def _get_user_goal(db: Session, goal_uuid: UUID, user_id: int) -> Goal:
+    goal = _goal_query(db, user_id).filter(Goal.uuid == goal_uuid).first()
     if not goal:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GOAL_NOT_FOUND)
     return goal
 
 
-def _get_user_option(db: Session, goal_id: int, option_id: int, user_id: int) -> GoalOption:
-    goal = _get_user_goal(db, goal_id, user_id)
-    option = next((item for item in goal.options if item.id == option_id), None)
+def _get_user_option(db: Session, goal_uuid: UUID, option_uuid: UUID, user_id: int) -> GoalOption:
+    goal = _get_user_goal(db, goal_uuid, user_id)
+    option = next((item for item in goal.options if item.uuid == option_uuid), None)
     if not option:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GOAL_OPTION_NOT_FOUND)
     return option
@@ -60,6 +61,7 @@ def _goal_to_response(goal: Goal) -> GoalResponse:
     metrics = calculate_goal_metrics(goal)
     return GoalResponse(
         id=goal.id,
+        uuid=goal.uuid,
         user_id=goal.user_id,
         name=goal.name,
         description=goal.description,
@@ -84,6 +86,7 @@ def _option_to_response(option: GoalOption, goal: Goal, metrics: dict) -> GoalOp
     analysis = analyze_option(option, goal, metrics)
     return GoalOptionResponse(
         id=option.id,
+        uuid=option.uuid,
         goal_id=option.goal_id,
         name=option.name,
         estimated_amount=option.estimated_amount,
@@ -131,17 +134,17 @@ def create_goal(
     db.add(goal)
     db.commit()
     db.refresh(goal)
-    goal = _get_user_goal(db, goal.id, current_user.id)
+    goal = _get_user_goal(db, goal.uuid, current_user.id)
     return _goal_to_response(goal)
 
 
-@router.get("/{goal_id}", response_model=GoalDetailResponse)
+@router.get("/{goal_uuid}", response_model=GoalDetailResponse)
 def get_goal(
-    goal_id: int,
+    goal_uuid: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    goal = _get_user_goal(db, goal_id, current_user.id)
+    goal = _get_user_goal(db, goal_uuid, current_user.id)
     metrics = calculate_goal_metrics(goal)
     base = _goal_to_response(goal).model_dump()
     options = [_option_to_response(option, goal, metrics) for option in goal.options]
@@ -158,41 +161,41 @@ def get_goal(
     return GoalDetailResponse(**base, options=options, option_comparison=comparison, analysis=analysis)
 
 
-@router.put("/{goal_id}", response_model=GoalResponse)
+@router.put("/{goal_uuid}", response_model=GoalResponse)
 def update_goal(
-    goal_id: int,
+    goal_uuid: UUID,
     data: GoalUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    goal = _get_user_goal(db, goal_id, current_user.id)
+    goal = _get_user_goal(db, goal_uuid, current_user.id)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(goal, field, value)
     _auto_complete_goal(goal)
     db.commit()
-    goal = _get_user_goal(db, goal_id, current_user.id)
+    goal = _get_user_goal(db, goal_uuid, current_user.id)
     return _goal_to_response(goal)
 
 
-@router.delete("/{goal_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{goal_uuid}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_goal(
-    goal_id: int,
+    goal_uuid: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    goal = _get_user_goal(db, goal_id, current_user.id)
+    goal = _get_user_goal(db, goal_uuid, current_user.id)
     db.delete(goal)
     db.commit()
 
 
-@router.post("/{goal_id}/options", response_model=GoalOptionResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/{goal_uuid}/options", response_model=GoalOptionResponse, status_code=status.HTTP_201_CREATED)
 def create_option(
-    goal_id: int,
+    goal_uuid: UUID,
     data: GoalOptionCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    goal = _get_user_goal(db, goal_id, current_user.id)
+    goal = _get_user_goal(db, goal_uuid, current_user.id)
     option = GoalOption(goal_id=goal.id, **data.model_dump())
     db.add(option)
     db.commit()
@@ -201,16 +204,16 @@ def create_option(
     return _option_to_response(option, goal, metrics)
 
 
-@router.put("/{goal_id}/options/{option_id}", response_model=GoalOptionResponse)
+@router.put("/{goal_uuid}/options/{option_uuid}", response_model=GoalOptionResponse)
 def update_option(
-    goal_id: int,
-    option_id: int,
+    goal_uuid: UUID,
+    option_uuid: UUID,
     data: GoalOptionUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    goal = _get_user_goal(db, goal_id, current_user.id)
-    option = _get_user_option(db, goal_id, option_id, current_user.id)
+    goal = _get_user_goal(db, goal_uuid, current_user.id)
+    option = _get_user_option(db, goal_uuid, option_uuid, current_user.id)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(option, field, value)
     db.commit()
@@ -219,13 +222,13 @@ def update_option(
     return _option_to_response(option, goal, metrics)
 
 
-@router.delete("/{goal_id}/options/{option_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{goal_uuid}/options/{option_uuid}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_option(
-    goal_id: int,
-    option_id: int,
+    goal_uuid: UUID,
+    option_uuid: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    option = _get_user_option(db, goal_id, option_id, current_user.id)
+    option = _get_user_option(db, goal_uuid, option_uuid, current_user.id)
     db.delete(option)
     db.commit()

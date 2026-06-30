@@ -1,10 +1,11 @@
+from uuid import UUID
 from datetime import datetime
-
 from pydantic import BaseModel, Field
 
 
 class CategoryResponse(BaseModel):
     id: int
+    uuid: UUID
     name: str
     created_at: datetime
 

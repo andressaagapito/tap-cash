@@ -258,7 +258,7 @@ export default function ExpenseForm() {
         total_installments: data.total_installments.toString(),
         recurrence_months: data.recurrence_months?.toString() || '',
         auto_calculate_total: autoCalculateTotal,
-        card_id: data.card_id?.toString() || '',
+        card_id: data.card_uuid || '',
         category: categoryFields.category,
         custom_category: categoryFields.custom_category,
         paid_installments: String(data.manual_paid_installments ?? 0),
@@ -290,8 +290,8 @@ export default function ExpenseForm() {
       recurrence_months: formData.recurrence_months
         ? parseInt(formData.recurrence_months)
         : null,
-      card_id: formData.payment_method === 'credit_card' && formData.card_id
-        ? parseInt(formData.card_id)
+      card_uuid: formData.payment_method === 'credit_card' && formData.card_id
+        ? formData.card_id
         : null,
       category: resolvedCategory,
       notes: formData.notes || null,
@@ -320,9 +320,9 @@ export default function ExpenseForm() {
 
     setDeletingCategory(true);
     try {
-      await categoriesApi.delete(deleteCategoryTarget.id);
+      await categoriesApi.delete(deleteCategoryTarget.uuid);
       setCustomCategories((current) =>
-        current.filter((item) => item.id !== deleteCategoryTarget.id)
+        current.filter((item) => item.uuid !== deleteCategoryTarget.uuid)
       );
       if (category === deleteCategoryTarget.name) {
         setValue('category', '');
@@ -505,7 +505,7 @@ export default function ExpenseForm() {
               label={t('expenses.card')}
               options={[
                 { value: '', label: t('common.none') },
-                ...cards.map((c) => ({ value: c.id, label: c.name })),
+                ...cards.map((c) => ({ value: c.uuid, label: c.name })),
               ]}
               {...register('card_id')}
             />
