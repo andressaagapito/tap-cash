@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
@@ -8,10 +8,12 @@ import { useTranslation } from 'react-i18next';
 import { cardsApi } from '../api/cards';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import CurrencyInput from '../components/ui/CurrencyInput';
 import Modal, { ConfirmModal } from '../components/ui/Modal';
 import Loading from '../components/ui/Loading';
 import EmptyState from '../components/ui/EmptyState';
 import CardStylePicker from '../components/cards/CardStylePicker';
+
 import CreditCardTile from '../components/cards/CreditCardTile';
 import CreditCardList from '../components/cards/CreditCardListItem';
 import { DEFAULT_CARD_COLOR, DEFAULT_CARD_ICON } from '../utils/cardStyle';
@@ -73,11 +75,13 @@ export default function Cards() {
   const {
     register,
     handleSubmit,
+    control,
     reset,
     watch,
     setValue,
     formState: { errors },
   } = useForm({ resolver: zodResolver(schema), defaultValues: emptyForm });
+
 
   const color = watch('color');
   const icon = watch('icon');
@@ -266,7 +270,19 @@ export default function Cards() {
 
           <Input label={t('cards.cardName')} error={errors.name?.message} {...register('name')} />
           <Input label={t('cards.institution')} error={errors.institution?.message} {...register('institution')} />
-          <Input label={t('cards.limitOptional')} type="number" step="0.01" {...register('limit')} />
+          <Controller
+            name="limit"
+            control={control}
+            render={({ field }) => (
+              <CurrencyInput
+                label={t('cards.limitOptional')}
+                error={errors.limit?.message}
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
+          />
+
           <div className="grid grid-cols-2 gap-4">
             <Input label={t('cards.closingDay')} type="number" min="1" max="31" {...register('closing_day')} />
             <Input label={t('cards.dueDay')} type="number" min="1" max="31" {...register('due_day')} />
