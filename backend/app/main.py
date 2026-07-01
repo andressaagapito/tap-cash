@@ -10,7 +10,7 @@ from app.middleware.error_handlers import (
     validation_exception_handler,
 )
 from app.middleware.sql_injection_guard import SQLInjectionGuardMiddleware
-from app.routers import auth, cards, categories, expenses, financial_profile, goals, projection
+from app.routers import auth, cards, categories, expenses, financial_profile, goals, projection, backup
 from app.utils.logger import setup_error_logger
 
 setup_error_logger()
@@ -51,3 +51,5 @@ app.include_router(expenses.router)
 app.include_router(financial_profile.router)
 app.include_router(projection.projection_router)
 app.include_router(projection.suggestions_router)
+app.include_router(backup.router)
+

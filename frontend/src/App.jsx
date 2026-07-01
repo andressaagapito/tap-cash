@@ -16,6 +16,7 @@ import Goals from './pages/Goals';
 import GoalForm from './pages/GoalForm';
 import GoalDetail from './pages/GoalDetail';
 import Profile from './pages/Profile';
+import Backup from './pages/Backup';
 import { useAuthStore } from './store/authStore';
 import { useAuthHydrated } from './hooks/useAuthHydrated';
 import Loading from './components/ui/Loading';
@@ -94,6 +95,7 @@ export default function App() {
           <Route path="/goals/:id" element={<GoalDetail />} />
           <Route path="/goals/:id/edit" element={<GoalForm />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/settings/backup" element={<Backup />} />
         </Route>
 
         <Route path="/" element={<RootRedirect />} />
@@ -102,3 +104,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+

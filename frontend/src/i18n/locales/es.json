@@ -34,14 +34,16 @@
     "es": "Español"
   },
   "nav": {
-    "dashboard": "Panel",
+    "dashboard": "Dashboard",
     "cards": "Tarjetas",
     "expenses": "Gastos",
     "projection": "Proyección",
     "suggestions": "Sugerencias",
     "goals": "Metas",
-    "profile": "Perfil"
+    "profile": "Perfil",
+    "backup": "Datos"
   },
+
   "auth": {
     "login": "Iniciar sesión",
     "register": "Registrarse",
@@ -402,7 +404,42 @@
     "neverChanged": "Nunca",
     "securityTitle": "Seguridad & Credenciales"
   },
+  "backup": {
+    "title": "Copia de Seguridad",
+    "subtitle": "Exporte sus datos financieros o importe una copia de seguridad existente",
+    "exportSection": "Exportar Datos",
+    "exportDesc": "Descargue todos sus datos (tarjetas, gastos, cuotas, metas y categorías) en un archivo Excel (.xlsx). No se exporta ninguna contraseña ni datos de autenticación sensibles.",
+    "exportBtn": "Descargar Excel",
+    "importSection": "Importar Datos",
+    "importDesc": "Seleccione un archivo Excel (.xlsx) que contenga su copia de seguridad de TapCash para importar.",
+    "importWarning": "La importación puede crear o actualizar sus datos financieros. Recomendamos descargar una copia de seguridad de los datos actuales antes de continuar.",
+    "importBtn": "Importar Excel",
+    "selectFile": "Elegir archivo...",
+    "processing": "Procesando importación...",
+    "success": "¡Importación completada con éxito!",
+    "error": "Error al importar datos",
+    "summaryTitle": "Resumen de Importación",
+    "tableTab": "Pestaña (Tabla)",
+    "tableImported": "Importados",
+    "tableIgnored": "Ignorados/Duplicados",
+    "tableErrors": "Errores",
+    "noFileSelected": "Ningún archivo seleccionado.",
+    "confirmImport": "¿Está seguro de que desea importar esta copia de seguridad? Los datos se integrarán en su cuenta.",
+    "templateSection": "Plantilla de Gastos",
+    "templateDesc": "Descargue una plantilla de hoja de cálculo preconfigurada para completar e importar múltiples gastos a la vez.",
+    "downloadTemplateBtn": "Descargar Plantilla de Hoja de Cálculo",
+    "templateSuccess": "¡Plantilla de gastos descargada con éxito!",
+    "tableUsers": "Usuarios",
+    "tableFinancialProfile": "Perfil Financiero",
+    "tableCategories": "Categorías",
+    "tableCards": "Tarjetas",
+    "tableGoals": "Metas",
+    "tableGoalOptions": "Opciones de Metas",
+    "tableExpenses": "Gastos",
+    "tableInstallments": "Historial de Cuotas"
+  },
   "errors": {
+
     "email_already_registered": "Correo electrónico ya registrado",
     "invalid_credentials": "Correo o contraseña inválidos",
     "invalid_token": "Token inválido",

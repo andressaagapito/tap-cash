@@ -10,6 +10,7 @@ import {
   User,
   Wallet,
   X,
+  Database,
 } from 'lucide-react';
 
 const navItems = [
@@ -20,7 +21,9 @@ const navItems = [
   { to: '/suggestions', labelKey: 'nav.suggestions', icon: Lightbulb },
   { to: '/goals', labelKey: 'nav.goals', icon: Target },
   { to: '/profile', labelKey: 'nav.profile', icon: User },
+  { to: '/settings/backup', labelKey: 'nav.backup', icon: Database },
 ];
+
 
 export default function Sidebar({ open, onClose }) {
   const { t } = useTranslation();

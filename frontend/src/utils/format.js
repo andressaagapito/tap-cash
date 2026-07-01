@@ -35,11 +35,18 @@ export function parseMoneyInput(value) {
   let normalized = value.toString().replace(/[^\d,.-]/g, '');
   if (normalized.includes(',')) {
     normalized = normalized.replace(/\./g, '').replace(',', '.');
+  } else {
+    // If no comma but has dots, check if dots are thousands separators
+    const dotCount = (normalized.match(/\./g) || []).length;
+    if (dotCount > 1 || (dotCount === 1 && /\.\d{3}$/.test(normalized))) {
+      normalized = normalized.replace(/\./g, '');
+    }
   }
   const num = parseFloat(normalized);
   if (Number.isNaN(num)) return '';
   return num.toFixed(2);
 }
+
 
 export function parseMoneyNumber(value) {
   const parsed = parseMoneyInput(value);
